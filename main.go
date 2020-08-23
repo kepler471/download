@@ -7,21 +7,24 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"path"
 	"strings"
 )
 
-// "http://www.gatsby.ucl.ac.uk/teaching/courses/ml1-2016.html"
-
 type File struct {
 	Type FileType
+	Name string
 	URL  string
-	Size int
+	Size int64
 }
 
 type FileType string
 
 var t = flag.String("t", "pdf", "specify file type")
 var y = flag.Bool("y", false, "assume yes for download confirmation")
+
+// TODO add flag to suppress output
 
 func main() {
 	flag.Parse()
@@ -47,26 +50,55 @@ func main() {
 		links := getLinks(resp.Body)
 		_ = resp.Body.Close()
 		// download links that match the given file type
+		var totalDownloadSize int64
+		var files []File
 		for _, link := range links {
 			if strings.HasSuffix(link, "."+*t) {
-				split := strings.Split(link, "/")
-				link = split[cap(split)-1]
-				f := File{
+				u, _ := url.Parse(URL)
+				// get URL for file and store
+				var f = File{
 					Type: FileType(*t),
-					URL:  strings.TrimSuffix(URL, ".html") + "/" + link,
-					Size: 0,
+					Name: path.Base(link),
+					URL:  u.Scheme + "://" + path.Join(u.Host, path.Dir(u.Path), link),
 				}
+				// get file information
+				resp, err := http.Head(f.URL)
+				if err != nil {
+					log.Fatalf("error fetching file: %v @ %v\n", f.Name, f.URL)
+				}
+				f.Size = resp.ContentLength
+				totalDownloadSize += f.Size
+				fmt.Printf("%v, size: %v: %v\n", f.Name, f.Size, f.URL)
 				if *y {
-					downloadFile(f.URL)
+					downloadFile(f)
 				} else {
-					fmt.Println("...user input here...")
+					files = append(files, f)
 				}
+				_ = resp.Body.Close()
 			}
 		}
-		if len(links) == 0 {
-			fmt.Println("No links found")
+
+		if len(files) == 0 {
+			fmt.Print("No links found")
 		} else {
-			fmt.Printf("%v links found", len(links))
+			fmt.Printf("\n%v %v files found\n", len(files), *t)
+			fmt.Printf("Total download size: %v\n", totalDownloadSize)
+			fmt.Print("Would you like to download all [y/N]: ")
+			var input string
+			_, err := fmt.Scanln(&input)
+			input = strings.Trim(input, " ")
+			fmt.Println(input)
+			if err != nil {
+				log.Println("invalid user input")
+			}
+			switch input {
+			case "y", "Y":
+				for _, f := range files {
+					downloadFile(f)
+				}
+			default:
+				fmt.Println("Aborted.")
+			}
 		}
 	}
 }
@@ -92,6 +124,6 @@ func getLinks(body io.Reader) (links []string) {
 	}
 }
 
-func downloadFile(link string) {
-	fmt.Printf("~ Download placeholder for: %v\n", link)
+func downloadFile(f File) {
+	fmt.Printf("~ downloading %v\n", f.Name)
 }
