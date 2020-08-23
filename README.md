@@ -9,7 +9,15 @@ If files are found, each url will have a directory, and a sub-directory for a fi
 download will show which files have been found, their download size, and ask for confirmation.
   
 Usage:
-    `download -y -t pdf www.website.com/page/with/files.html`  
+    `download -y -t pdf www.site.com/page/with/files.html www.anothersite.com/page/with/files.html`  
+    
+Flags:
+  - `-y` bool. Add to automatically download all files, ignoring user confirmation.
+    
+    default (no flag): `false` 
+  - `-t` string. Specify file extension 
+  
+    default (no flag): `pdf`
 
 Future functionality:
   - concurrent downloads
