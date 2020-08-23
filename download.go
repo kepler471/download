@@ -22,16 +22,13 @@ type File struct {
 type FileType string
 
 var (
-	t = flag.String("t", "pdf", "specify file type")
-	y = flag.Bool("y", false, "assume yes for download confirmation")
-	// TODO add flag to suppress output
+	t                 = flag.String("t", "pdf", "specify file type")
+	y                 = flag.Bool("y", false, "assume yes for download confirmation")
+	totalDownloadSize int64
+	files             []File
 )
 
 func main() {
-	var (
-		totalDownloadSize int64
-		files             []File
-	)
 	flag.Parse()
 	// TODO want to handle URL endings, eg .html, .htm ...
 	for _, URL := range flag.Args() {
@@ -55,7 +52,11 @@ func main() {
 		// get links from all anchor tag references
 		links := getLinks(resp.Body)
 		_ = resp.Body.Close()
-		getFiles(URL, totalDownloadSize, links, files)
+		for _, link := range links {
+			if strings.HasSuffix(link, "."+*t) {
+				files = append(files, getInfo(URL, link))
+			}
+		}
 	}
 
 	fmt.Printf("\n%v %v files found\n", len(files), *t)
@@ -82,34 +83,24 @@ func main() {
 	}
 }
 
-func getFiles(URL string, totalDownloadSize int64, links []string, files []File) {
-	// links that match the given file type
-	for _, link := range links {
-		if strings.HasSuffix(link, "."+*t) {
-			u, _ := url.Parse(URL)
-			// get URL for file and store
-			var f = File{
-				Type: FileType(*t),
-				Name: path.Base(link),
-				URL:  u.Scheme + "://" + path.Join(u.Host, path.Dir(u.Path), link),
-			}
-			// get file information
-			resp, err := http.Head(f.URL)
-			if err != nil {
-				log.Fatalf("error fetching file: %v @ %v\n", f.Name, f.URL)
-			}
-			f.Size = resp.ContentLength
-			totalDownloadSize += f.Size
-			fmt.Printf("%v,\ttotalDownloadSize: %v,\t%v\n", f.Name, f.Size, f.URL)
-			if *y {
-				downloadFile(f)
-			} else {
-				files = append(files, f)
-			}
-			_ = resp.Body.Close()
-		}
+// GetInfo creates a File struct given a link to a file
+func getInfo(URL string, link string) File {
+	u, _ := url.Parse(URL)
+	var f = File{
+		Type: FileType(*t),
+		Name: path.Base(link),
+		URL:  u.Scheme + "://" + path.Join(u.Host, path.Dir(u.Path), link),
 	}
-	return
+	// get file information
+	resp, err := http.Head(f.URL)
+	if err != nil {
+		log.Fatalf("error fetching file: %v @ %v\n", f.Name, f.URL)
+	}
+	f.Size = resp.ContentLength
+	totalDownloadSize += f.Size
+	fmt.Printf("%v,\tsize: %v,\t%v\n", f.Name, f.Size, f.URL)
+	_ = resp.Body.Close()
+	return f
 }
 
 func downloadFile(f File) {
