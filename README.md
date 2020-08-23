@@ -5,7 +5,8 @@ download is a command line batch file downloader written in Go.
 Given a list of urls, download will show which files have been found, their download size, and ask for confirmation.
   
 ### Usage:
-    `download -y -t pdf www.site.com/page/with/files.html www.anothersite.com/page/with/files.html`  
+
+`download -y -t pdf www.site.com/page/with/files.html www.anothersite.com/page/with/files.html`  
     
 ### Flags:
   - `-t` string. Specify file extension 
