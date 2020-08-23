@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 )
@@ -22,8 +23,9 @@ type File struct {
 type FileType string
 
 var (
-	t                 = flag.String("t", "pdf", "specify file type")
-	y                 = flag.Bool("y", false, "assume yes for download confirmation")
+	t = flag.String("t", "pdf", "specify file type")
+	y = flag.Bool("y", false, "assume yes for download confirmation")
+	// TODO flag to output only matching files
 	totalDownloadSize int64
 	files             []File
 )
@@ -94,7 +96,7 @@ func getInfo(URL string, link string) File {
 	// get file information
 	resp, err := http.Head(f.URL)
 	if err != nil {
-		log.Fatalf("error fetching file: %v @ %v\n", f.Name, f.URL)
+		log.Fatalf("error fetching file header: %v @ %v\n", f.Name, f.URL)
 	}
 	f.Size = resp.ContentLength
 	totalDownloadSize += f.Size
@@ -105,6 +107,20 @@ func getInfo(URL string, link string) File {
 
 func downloadFile(f File) {
 	fmt.Printf("~ downloading %v\n", f.Name)
+	file, err := os.Create(f.Name)
+	if err != nil {
+		log.Fatalf("could not create %v, %v\n", f.Name, err)
+	}
+	defer file.Close()
+
+	data, err := http.Get(f.URL)
+	if err != nil {
+		log.Fatalf("error fetching file: %v\n", err)
+	}
+	_, err = io.Copy(file, data.Body)
+	if err != nil {
+		log.Fatalf("error writing to %v: %v\n", f.Name, err)
+	}
 }
 
 func getLinks(body io.Reader) (links []string) {
