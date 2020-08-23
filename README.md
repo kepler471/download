@@ -14,3 +14,5 @@ Usage:
 Future functionality:
   - concurrent downloads
   - suggest file types found in page
+  - option to specify download directory
+  - option to create sub-directory for each URL  
