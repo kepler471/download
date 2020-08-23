@@ -1,38 +1,34 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"golang.org/x/net/html"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 )
 
 // "http://www.gatsby.ucl.ac.uk/teaching/courses/ml1-2016.html"
 
-/*
-TODO create a `file` type, something along these lines
-
 type File struct {
-	Type	FileType
-	Data    string
-	URL     string
-	Size	int
+	Type FileType
+	URL  string
+	Size int
+}
 
 type FileType string
 
-*/
+var t = flag.String("t", "pdf", "specify file type")
+var y = flag.Bool("y", false, "assume yes for download confirmation")
 
 func main() {
-	filetype := os.Args[1]
-	fmt.Println(filetype)
-	for _, URL := range os.Args[2:] {
-		if !strings.HasPrefix(URL, "http://") {
+	flag.Parse()
+	for _, URL := range flag.Args() {
+		if !strings.HasPrefix(URL, "http://") && !strings.HasPrefix(URL, "https://") {
 			URL = "http://" + URL
 		}
-		fmt.Println(URL)
 		resp, err := http.Get(URL)
 		// check URL fetched correctly
 		if err != nil {
@@ -50,12 +46,21 @@ func main() {
 		// get links from all anchor tag references
 		links := getLinks(resp.Body)
 		_ = resp.Body.Close()
-		// download links that match the given filetype
-		var files []string
+		// download links that match the given file type
 		for _, link := range links {
-			if strings.HasSuffix(link, "."+filetype) {
-				files = append(files, link)
-				fmt.Printf("Link found: %v\n", link)
+			if strings.HasSuffix(link, "."+*t) {
+				split := strings.Split(link, "/")
+				link = split[cap(split)-1]
+				f := File{
+					Type: FileType(*t),
+					URL:  strings.TrimSuffix(URL, ".html") + "/" + link,
+					Size: 0,
+				}
+				if *y {
+					downloadFile(f.URL)
+				} else {
+					fmt.Println("...user input here...")
+				}
 			}
 		}
 		if len(links) == 0 {
@@ -87,6 +92,6 @@ func getLinks(body io.Reader) (links []string) {
 	}
 }
 
-func downloadFile() {
-
+func downloadFile(link string) {
+	fmt.Printf("~ Download placeholder for: %v\n", link)
 }
