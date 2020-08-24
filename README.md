@@ -21,4 +21,5 @@ Given a list of urls, download will show which files have been found, their down
   - concurrent downloads
   - suggest file types found in page
   - option to specify download directory
-  - option to create sub-directory for each URL  
+  - option to create sub-directory for each URL
+  - install script
