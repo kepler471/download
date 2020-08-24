@@ -11,11 +11,15 @@ Given a list of urls, download will show which files have been found, their down
 ### Flags:
   - `-t` string. Specify file extension 
   
-    default (no flag): `pdf`
+    default: `pdf`
+    
+  - `-l` bool. List files only. Overrides all bool flags
+  
+    default: `false`
     
   - `-y` bool. Add to automatically download all files, ignoring user confirmation.
     
-    default (no flag): `false` 
+    default: `false` 
 
 ##### TODO:
 - concurrent downloads
