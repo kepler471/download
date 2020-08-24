@@ -17,9 +17,13 @@ Given a list of urls, download will show which files have been found, their down
     
     default (no flag): `false` 
 
-##### Future functionality:
-  - concurrent downloads
-  - suggest file types found in page
-  - option to specify download directory
-  - option to create sub-directory for each URL
-  - install script
+##### TODO:
+- concurrent downloads
+- suggest file types found in page
+- option to specify download directory
+- option to create sub-directory for each URL
+- install script
+- want to handle URL endings, eg .html, .htm ...
+- handle even when 0 urls provided with better feedback
+- provide help, default for no args
+- replace logs with errors
