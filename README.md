@@ -2,6 +2,8 @@
 
 download is a command line batch file downloader written in Go.
 
+It provides a tiny section of what `wget` can do, but why read that huge man page when I can write my own progaram?
+
 Given a list of urls, download will show which files have been found, their download size, and ask for confirmation.
   
 ### Usage:
